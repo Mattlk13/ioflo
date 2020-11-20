@@ -268,13 +268,13 @@ class Requester(object):
                                          '\r\n{2}'.format(boundary, key, val))
                     formParts.append('\r\n--{0}--'.format(boundary))
                     form = "".join(formParts)
-                    body = form.encode(encoding='utf-8')
+                    body = form.encode('utf-8')
                     self.headers[u'content-type'] = u'multipart/form-data; boundary={0}'.format(boundary)
                 else:
                     formParts = [u"{0}={1}".format(key, val) for key, val in self.fargs.items()]
                     form = u'&'.join(formParts)
                     form = quote_plus(form, '&=')
-                    body = form.encode(encoding='utf-8')
+                    body = form.encode('utf-8')
                     self.headers[u'content-type'] = u'application/x-www-form-urlencoded; charset=utf-8'
             else:  # body last in precendence
                 body = self.body
@@ -1157,31 +1157,30 @@ class Patron(object):
             self.store.advanceStamp(0.125)
         return self.respond()
 
-    if sys.version_info >= (3, 6):
-        def serviceWhileGen(self, timeout=0.5):
-            """
-            Generator Method.
-            ServiceAll while pending requests or not a response or not timeout
+    def serviceWhileGen(self, timeout=0.5):
+        """
+        Generator Method.
+        ServiceAll while pending requests or not a response or not timeout
 
-            Usage:
-            response = yield from .serviceWhileGen(timeout=0.5)
+        Usage:
+        response = yield from .serviceWhileGen(timeout=0.5)
 
-            Runs one iteration of serviceAll on next and yields empty
-            bytes while not done.
+        Runs one iteration of serviceAll on next and yields empty
+        bytes while not done.
 
-            Assumes store timer is advanced and realtime sleep delay
-            is incurred elsewhere.
+        Assumes store timer is advanced and realtime sleep delay
+        is incurred elsewhere.
 
-            Returns response as namedtuple or None if timeout.
-            """
-            timer = timing.StoreTimer(store=self.store, duration=timeout)
-            while ((self.requests or self.connector.txes or not self.responses)
-                   and not timer.expired):
-                try:
-                    self.serviceAll()
-                except Exception as ex:
-                    console.terse("Error: Servicing Patron '{0}'."
-                                  " '{1}'\n".format(self.connector.name, ex))
-                    raise ex
-                yield b''  # this is eventually yielded by wsgi app while waiting
-            return self.respond()
+        Returns response as namedtuple or None if timeout.
+        """
+        timer = timing.StoreTimer(store=self.store, duration=timeout)
+        while ((self.requests or self.connector.txes or not self.responses)
+               and not timer.expired):
+            try:
+                self.serviceAll()
+            except Exception as ex:
+                console.terse("Error: Servicing Patron '{0}'."
+                              " '{1}'\n".format(self.connector.name, ex))
+                raise ex
+            yield b''  # this is eventually yielded by wsgi app while waiting
+        return self.respond()
